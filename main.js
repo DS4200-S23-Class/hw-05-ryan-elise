@@ -1,6 +1,108 @@
 const frame_height = 500;
 const frame_width = 500;
 const margins = {left: 100, right: 100, top: 20, bottom:20};
+const S_MARGINS = {left: 30, right: 30, top: 30, bottom:30};
+
+const FRAME1 = d3.select("#vis1")
+                .append("svg")
+                    .attr("height", frame_height)
+                    .attr("width", frame_width)
+                    .attr("class", "frame");
+
+function handleOver(d) {
+    d.style.fill = "red";
+}
+
+function handleLeave(d) {
+    d.style.fill = "grey";
+}
+
+function handleClick(d, x, y) {
+    if (d.style.stroke === "black") {
+        d.style.stroke = "none";
+    }
+    else {
+        d.style.stroke = "black"
+    }
+
+    let text = document.getElementById("text");
+    text.style.display = "block";
+    text.innerHTML = "You just clicked point (" + Math.round(x) + "," + Math.round(y) + ").";
+}
+
+//Generates the points on the scatterplot, and returns X and Y scales for later use
+(function() {
+    d3.csv("data/scatter-data.csv").then((data) => {
+
+        const MAX_X = d3.max(data, (d) => {return parseInt(d.x);})
+
+        const X_SCALE = d3.scaleLinear()
+                            .domain([0, MAX_X + 1])
+                            .range([0, frame_width - S_MARGINS.left - S_MARGINS.right]);
+
+        const MAX_Y = d3.max(data, (d) => {return parseInt(d.y);})
+
+        const Y_SCALE = d3.scaleLinear()
+                            .domain([0, MAX_Y + 1])
+                            .range([frame_height - S_MARGINS.top - S_MARGINS.bottom, 0]);
+        
+        //Generates all points in the csv
+        FRAME1.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+                .attr("cx", (d) => { return (X_SCALE(d.x) + S_MARGINS.left); })
+                .attr("cy", (d) => { return (Y_SCALE(d.y) + S_MARGINS.top); })
+                .attr("r", 10)
+                .attr("fill", "grey")
+                .attr("class", "point")
+                
+
+        //Generates the x axis
+        FRAME1.append("g")
+            .attr("transform", "translate(" + S_MARGINS.left + 
+                "," + (frame_height - S_MARGINS.bottom) + ")") 
+            .call(d3.axisBottom(X_SCALE).ticks(10)) 
+                .attr("font-size", '18px');
+
+        //Generates the y axis
+        FRAME1.append("g")
+        .attr("transform", "translate(" + S_MARGINS.left + 
+            "," + S_MARGINS.top + ")")
+        .call(d3.axisLeft().scale(Y_SCALE).ticks(10))
+            .attr("font-size", "18px");
+
+        //Add event listeners to points
+        function addListeners() {
+            FRAME1.selectAll(".point")
+            .on("mouseover", function () {
+                handleOver(this)})
+            .on("mouseleave", function () {
+                handleLeave(this)})
+            .on("click", function () {
+                handleClick(this, X_SCALE.invert(d3.select(this).attr("cx") - S_MARGINS.left), Y_SCALE.invert(d3.select(this).attr("cy") - S_MARGINS.top))
+            })
+        }
+        addListeners();
+
+        //Allows the user to create points
+        function submitClick() {
+            let x = document.getElementById("xvals").value;
+            let y = document.getElementById("yvals").value;
+
+            FRAME1.append("circle")
+                .attr("cx", (d) => { return (X_SCALE(x) + S_MARGINS.left); })
+                .attr("cy", (d) => { return (Y_SCALE(y) + S_MARGINS.top); })
+                .attr("r", 10)
+                .attr("fill", "grey")
+                .attr("class", "point");
+
+            addListeners();
+        }
+        document.getElementById("button").addEventListener('click', submitClick);
+    });
+})()
+
 
 //bar chart chaos time commences here
 const frame2 =
