@@ -1,0 +1,23 @@
+body {
+    font-family: Arial;
+}
+
+h1 {
+    text-align: center;
+}
+
+#col1 {
+	width: 60%;
+}
+
+#col2 {
+	width: 40%;
+}
+
+.tooltip{
+    position:absolute;
+    background-color: black;
+    color: purple;
+    font-weight: bold;
+    padding: 5px;
+}
